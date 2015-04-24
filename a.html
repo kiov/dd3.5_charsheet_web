@@ -1,0 +1,400 @@
+<html>
+<head>
+<style>
+.page1 { 
+    position: relative;
+}
+.page1 .background {
+    // max-height: 30em;
+    max-width: 60em;
+    no-repeat: true;
+}
+.page1 .form {
+    position: absolute;
+}
+
+.attr {
+  width: 2.6em;
+  height: 1.4em;
+}
+input {
+  position: absolute;
+  border: 0;
+  background-color: red;
+}
+input[id^="punt_"] { 
+  left: 9em;
+}
+input[id^="mod_"] { 
+  left: 12.05em;
+}
+input[id$="fuerza"]  {
+  top: 20.65em;
+}
+
+input[id$="destreza"]  {
+  top: 22.64em;
+}
+
+input[id$="constitucion"]  {
+  top: 24.7em;
+}
+
+input[id$="inteligencia"]  {
+  top: 26.71em
+}
+
+input[id$="sabiduria"]  {
+  top: 28.75em;
+}
+
+input[id$="carisma"]  {
+  top: 30.8em;
+}
+
+#nombre_personaje { 
+  top: 9.8em;
+  left: 29.5em;
+  width: 37em;
+}
+
+#jugador, #clase_nivel, #raza {
+  top: 12.7em;
+}
+#jugador {
+  left: 5.4em;
+  width: 23em;
+}
+
+#clase_nivel {
+  left: 29.5em;
+  width: 23em;
+}
+
+#raza {
+  left: 53.5em;
+  width: 13em;
+}
+
+#alineamiento, #deidad, #tamano, #edad, #sexo, #altura, #peso, #campana { 
+  top: 15.6em;
+  width: 6.6em;
+}
+
+#alineamiento {
+  left: 5.4em;
+}
+
+#deidad {
+  left: 13em;
+}
+
+#tamano {
+  left: 20.6em;
+} 
+
+#edad {
+  left: 28.2em;
+} 
+
+#sexo {
+  left: 35.8em;
+}
+
+#altura {
+  left: 43.4em;
+} 
+
+#peso {
+  left: 51em;
+}
+
+#campana {
+  left: 58.6em;
+  width: 8em;
+}
+
+input[id^="ca_"] {
+    top: 20.60em;
+    width: 1.8em;
+}
+
+#ca_total { 
+    left: 26.2em;
+    width: 3em;
+}
+
+#ca_armadura {
+	left: 31.8em;
+}
+
+#ca_escudo {
+	left: 34.4em;
+}
+
+#ca_destreza { 
+    left: 37.1em;
+}
+
+#ca_tamano {
+	left: 39.8em;
+}
+
+#ca_natural {
+	left: 42.5em;
+}
+
+#ca_desvio {
+	left: 45.2em;
+}
+
+#ca_varios {
+	left: 47.8em;
+}
+
+
+
+</style>
+<script>
+
+function modCalc(target, source) { 
+    if (source.value != "") {
+        mod = Math.floor((source.value - 10 )/ 2);
+        if (mod >= 0) { 
+            mod = "+" + mod;
+        }
+    } else {
+        mod = "";
+    }
+    target.value = mod
+	if (target.onchange != null) {
+		target.onchange();
+	}
+}
+
+function modSign(value) { 
+    if (value >= 0) { 
+        value = "+" + value;
+    }
+    return value;
+}
+
+function destreza() { 
+    return parseInt(document.getElementById("mod_destreza").value);
+}
+
+function updateCA() { 
+	var elements = document.querySelectorAll("input[x-sum=\"ca\"]");
+    var total = 10;
+	for (var i = 0; i < elements.length; i++) { 
+		var e = elements[i]
+		if (e.value != "") {
+			var val = parseInt(e.value);
+			total += val;
+			e.value = modSign(val)
+		}
+	}
+    document.getElementById("ca_total").value = modSign(total);
+}
+
+function queryToJSON() {
+    var pairs = location.hash.slice(1).split('&');
+
+    var result = {};
+    pairs.forEach(function(pair) {
+        pair = pair.split('=');
+        result[pair[0]] = decodeURIComponent(pair[1] || '');
+    });
+    
+    return JSON.parse(JSON.stringify(result));
+}
+
+function updateHash() {
+  if (document.loaded) {
+    var toHash = {};
+    var inputs = document.getElementsByTagName('input')
+    for (var i = 0; i < inputs.length; i++) {
+      var input = inputs[i];
+      if (input.readOnly) {
+        continue;
+      }
+	  var v = input.value || '';
+	  if (isGrouped(input)) { 
+	    group = g(input)
+		if (! (group.group in toHash)) {
+			toHash[group.group] = [];
+		}
+		if (group.type == "int") { 
+			v = parseInt(v);
+		}
+		toHash[group.group][group.order] = encodeURIComponent(v);
+	  } else {
+	    toHash[k(input)] = encodeURIComponent(v);
+	  }
+    }
+	var hash = "";
+	for (var key in toHash) { 
+		v = toHash[key];
+		if (Array.isArray(v)) {
+			var copy = v;
+			v = "";
+			for (var i = 0; i < copy.length; i++) {
+				if (v == "") {
+					v = copy[i];
+				} else {
+					v = v + "," + copy[i];
+				}
+				
+			}
+		}
+		if (hash == "") { 
+			hash = key + "=" + v;
+		} else {
+			hash = hash + "&" + key + "=" + v;
+		}
+	}
+    location.hash = hash;
+  }
+}
+
+function k(input) {
+    var k = input.getAttribute("x-shortname")
+    if (k == null) { 
+        k = input.id
+    }
+    return k;
+}
+
+function isGrouped(input) {
+	return input.getAttribute("x-group") != null;
+}
+
+function g(input) {
+    return { group : input.getAttribute("x-group"), order : parseInt(input.getAttribute("x-order")), type : input.getAttribute("x-group-type") || "str"}
+}
+
+function loadUrl() {
+  document.loaded = false;
+  p = queryToJSON();
+  var inputs = document.getElementsByTagName('input')
+  for (var i = 0; i < inputs.length; i++) {
+    var input = inputs[i];
+    if (input.readOnly) {
+      continue;
+    }
+	var v;
+	if (isGrouped(input)) {
+		var group = g(input);
+		v = p[group.group]
+		if (v === undefined) { 
+		  continue;
+		}
+		v = v.split(",")[group.order]
+	} else {
+		v = p[k(input)]
+	}
+	if (v === undefined) { 
+	  continue;
+	}
+	input.value = v;
+	if (input.onchange != null) {
+	  input.onchange();
+	}
+  }
+  registerHelpers();
+  document.loaded = true;
+}
+
+function registerHelpers() {
+	var elements = document.getElementsByTagName("input");
+	for (var i = 0; i < elements.length; i++) {
+		var input = elements[i];
+		
+		var source = input.getAttribute("x-source");
+		if (source != null) {
+			input.addEventListener("change", sourceChanged.bind(sourceChanged, source) , true);
+		}
+
+		if (input.readOnly) {
+			continue;
+		}
+
+		var old = input.onchange;
+		input.addEventListener("change", updateHash, true);
+
+	}
+}
+
+function sourceChanged(source) {
+	var elements = document.querySelectorAll("input[x-use=\""+source+"\"]")
+	for (var i = 0; i < elements.length; i++) {
+		var e = elements[i];
+		var func = e.getAttribute("x-use-function");
+		if (func == null) {
+			e.value = event.target.value;
+		} else {
+			f = eval(func);
+			f(e, event.target);
+		}
+	}
+}
+
+</script>
+<body onload="loadUrl()">
+<div class="page1">
+    <div class="form">
+        <form>
+            <!-- informacion del jugador -->
+            <input id="nombre_personaje" type="text" x-shortname="pj"/>
+
+            <input id="jugador" type="text" onchange="alert(1)"/>
+            <input id="clase_nivel" type="text" />
+            <input id="raza" type="text" />
+            
+            <input id="alineamiento" type="text" />
+            <input id="deidad" type="text" />
+            <input id="tamano" type="text" />
+            <input id="edad" type="text" />
+            <input id="sexo" type="text" />
+            <input id="altura" type="text" />
+            <input id="peso" type="text" />
+            <input id="campana" type="text" />    
+        
+            <!-- attributos -->
+            <input value="1" class="attr" id="punt_fuerza" type="text" x-source="fuerza" x-group="attrs" x-order="0" />
+            <input class="attr" id="mod_fuerza" type="text" readonly="true" x-use="fuerza" x-use-function="modCalc" />
+
+            <input value="2" class="attr" id="punt_destreza" type="text" x-source="destreza" x-group="attrs" x-order="1"/>
+            <input class="attr" id="mod_destreza" type="text" readonly="true" x-use="destreza" x-use-function="modCalc"/>
+            
+            <input value="3" class="attr" id="punt_constitucion" type="text" x-source="constitucion" x-group="attrs" x-order="2"/>
+            <input class="attr" id="mod_constitucion" type="text" readonly="true" x-use="constitucion" x-use-function="modCalc"/>
+            
+            <input value="4" class="attr" id="punt_inteligencia" type="text" x-source="inteligencia" x-group="attrs" x-order="3"/>
+            <input class="attr" id="mod_inteligencia" type="text" readonly="true" x-use="inteligencia" x-use-function="modCalc"/>
+
+            <input value="5" class="attr" id="punt_sabiduria" type="text" x-source="sabiduria" x-group="attrs" x-order="4"/>
+            <input class="attr" id="mod_sabiduria" type="text" readonly="true" x-use="sabiduria" x-use-function="modCalc"/>
+            
+            <input value="6" class="attr" id="punt_carisma" type="text" x-source="carisma" x-group="attrs" x-order="5"/>
+            <input class="attr" id="mod_carisma" type="text" readonly="true" x-use="sabiduria" x-use-function="modCalc""/>
+
+            <!-- CA -->
+            <input class="ca" id="ca_total" type="text" readonly="true" x-use="ca" x-use-function="updateCA"/>
+			
+            <input class="ca" id="ca_armadura" type="text" onchange="updateCA();" x-group="ca" x-order="0" x-group-type="int" x-sum="ca"/>
+            <input class="ca" id="ca_escudo" type="text" onchange="updateCA();" x-group="ca" x-order="1" x-group-type="int" x-sum="ca"/>
+            <input class="ca" id="ca_destreza" x-source="ca" x-use="destreza" x-use-function="modCalc" type="text" readonly="true" />
+            <input class="ca" id="ca_tamano" type="text" onchange="updateCA();" x-group="ca" x-order="2" x-group-type="int" x-sum="ca"/>
+            <input class="ca" id="ca_natural" type="text" onchange="updateCA();" x-group="ca" x-order="3" x-group-type="int" x-sum="ca"/>
+            <input class="ca" id="ca_desvio" type="text" onchange="updateCA();" x-group="ca" x-order="4" x-group-type="int" x-sum="ca"/>
+            <input class="ca" id="ca_varios" type="text" onchange="updateCA();" x-group="ca" x-order="5" x-group-type="int" x-sum="ca"/>
+
+            
+        </form>
+    </div>
+    <img src="imgs/1.png" class="background"/>
+
+</div>
+</body>
+</html>
